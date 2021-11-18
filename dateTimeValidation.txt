@@ -1,0 +1,32 @@
+//Controller
+CategoryOffer::create([
+  "category_id" => $category->id,  
+  'max_order' => $data['max_order'],
+  'start_from'  => \Carbon\Carbon::parse($data['start_from']),
+  'valid_upto'  => \Carbon\Carbon::parse($data['valid_upto']),
+  "addedby_id" => Auth::id()
+]);
+
+//HTML
+<label for="description_en" class="mt-3">Starting From</label>
+<input type="date" name="start_from" class="form-control" required>
+
+<label for="description_en" class="mt-3">Valid Upto</label>
+<input type="date" name="valid_upto" class="form-control" required>
+
+//FRONTEND
+@php
+    $isValid = false;
+    $product_offer = $product->offers;
+    if($product_offer){
+        $max_order = $product_offer->max_order;
+        $start_from = \Carbon\Carbon::parse($product_offer->start_from);
+        $valid_upto = \Carbon\Carbon::parse($product_offer->valid_upto);
+        $date_today = \Carbon\Carbon::now();
+        $isValid =  ($date_today->diffInSeconds($valid_upto, false)>0) && ($start_from->diffInSeconds($date_today, false)>0);
+    }
+@endphp
+@if ($isValid)
+<div class="offerTimer"><p id='cowndown{{ $product->id }}'>Timer</p></div>
+<script>startCowndownTimer("{{ $product_offer->valid_upto }}","cowndown{{ $product->id }}");</script>
+@endif
