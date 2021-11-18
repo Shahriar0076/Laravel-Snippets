@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Ensures optimal rendering on mobile devices. -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" /> <!-- Optimal Internet Explorer compatibility -->
+  <meta name="csrf-token" content="{{ csrf_token() }}" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+</head>
+
+<body>
+    <div id="blackOverlay" style="
+    background-color: #000000d9;
+    color: white;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    z-index: 99999;
+    top: 0;
+    left: 0;
+    text-align: center;
+    display: none;
+    ">
+        <h1>Please Wait, Your Order is processing</h1>
+    </div>
+
+
+    @php
+        $totalPriceInUSD = round($userData['price']*1.35, 2);
+        $totalPriceInBGP = round($userData['price'], 2);
+    @endphp
+
+    <div style="max-width: 500px;margin: 220px auto;">
+        <div id="paypal-button-container"></div>
+        <h3 style="text-align: center;">Your Bill: £{{$totalPriceInBGP}}</h3>
+    </div>
+
+  <script
+src="CLIENT_ID&currency=GBP&disable-funding=card,credit"> // Required. Replace YOUR_CLIENT_ID with your live client ID.
+  </script>
+
+
+    <script>
+        paypal.Buttons({
+        createOrder: function(data, actions) {
+        // This function sets up the details of the transaction, including the amount and line item details.
+        return actions.order.create({
+            purchase_units: [{
+            amount: {
+                    value: "{{$totalPriceInBGP}}",
+                    currency: "GBP",
+                }
+            }]
+        });
+        },
+        onApprove: function(data, actions) {
+        // This function captures the funds from the transaction.
+        return actions.order.capture().then(function(details) {
+            // This function shows a transaction success message to your buyer.
+            //write to database as paid with paypal
+            document.getElementById("blackOverlay").style.display = "block";
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+            $.ajax({
+                url: "{{ route('checkout') }}/setPaymentMethod/paypal/{{$userData['invoice']}}",
+                method:"GET",
+                data: {
+                    paymentMethod:'paypal',
+                },
+                success: function(data){
+                    location.replace("/get-guaideline/payment/success");
+                }
+            });
+
+        });
+        },
+        onCancel: function(data){
+            window.location.replace("/get-guaideline/payment/failed");
+        }
+    }).render('#paypal-button-container');
+    //This function displays Smart Payment Buttons on your web page.
+    </script>
+</body>
+</html>
