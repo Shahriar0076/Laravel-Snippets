@@ -1,0 +1,32 @@
+<script>startCowndownTimer("{{ $product_offer->valid_upto }}","cowndown{{ $product->id }}");</script>
+<p style="margin: 0px;" id='cowndownCategory{{ $campaign->id }}'>6h 41m 34s</p>
+
+function startCowndownTimer (valid_upto,cowndown_id,isCampaign) {
+                var countDownDate = new Date(valid_upto).getTime();
+                var x = setInterval(function() {
+                var now = new Date().getTime();
+                var distance = countDownDate - now;
+                var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                if(isCampaign){
+                    if(days===0){document.getElementById(cowndown_id+'_days').style.display = 'none';}
+                    document.getElementById(cowndown_id+'_days').innerHTML = days + "d";
+                    document.getElementById(cowndown_id+'_hours').innerHTML = hours + "h";
+                    document.getElementById(cowndown_id+'_minute').innerHTML = minutes + "m";
+                    document.getElementById(cowndown_id+'_second').innerHTML = seconds + "s";
+                }
+                else{
+                    var cowndowntimerText = "";
+                    if(days===0){cowndowntimerText= hours + "h "+ minutes + "m " + seconds + "s"}
+                    else{cowndowntimerText=days + "d " + hours + "h "+ minutes + "m " + seconds + "s"}
+                    document.getElementById(cowndown_id).innerHTML = cowndowntimerText;
+                }
+
+                if (distance < 0) {
+                    clearInterval(x);
+                    document.getElementById(cowndown_id).innerHTML = "EXPIRED";
+                }
+                }, 1000);
+            }
