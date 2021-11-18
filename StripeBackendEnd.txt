@@ -1,0 +1,32 @@
+public function stripeCheckout(Request $request,$price){
+        try {
+            $charge = Stripe::charges()->create([
+                'amount' => $price,
+                'currency' => 'GBP',
+                'source' => $request->stripeToken,
+                'description' => 'Order',
+                'receipt_email' => $request->email,
+                'metadata' => [
+                    "email" => $request->email,
+                    "name" => $request->name,
+                    "address" => $request->address,
+                    "city" => $request->city,
+                    "province" => $request->province,
+                    "postalcode" => $request->postalcode,
+                    "phone" => $request->phone,
+                    "name_on_card" => $request->name_on_card,
+                    "stripeToken" => $request->stripeToken,
+                ],
+            ]);
+
+            GetGuideline::where('invoice',Session::get('invoice'))->update(['payment_method' => 'stripe']);            
+            app('App\Http\Controllers\AdminOrderController')->sendVal();
+            Cart::where('ip',getIp())->delete();
+            return redirect()->route('paymentSuccess');
+        } catch (Exception $e) {
+            // $this->addToOrdersTables($request, $e->getMessage());
+            // return back()->withErrors('Error! ' . $e->getMessage());
+            return redirect()->route('paymentFailed');
+        }
+        //write to database as paid with stripe
+    }
